@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AdvisorAI — Call History Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary:    #0F1117;
+      --bg-surface:    #1A1D27;
+      --bg-elevated:   #222536;
+      --border:        #2E3250;
+      --accent:        #5B6AF0;
+      --accent-soft:   rgba(91,106,240,0.12);
+      --text-primary:  #E8E9F0;
+      --text-secondary:#8B8FA8;
+      --success:       #34D399;
+      --warning:       #FBBF24;
+      --error:         #F87171;
+      --font:          'Inter', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* ── Header ─────────────────────────────────── */
+    header {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 28px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .logo .accent { color: var(--accent); }
+    .logo-sub {
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--text-secondary);
+      margin-left: 4px;
+    }
+
+    nav { display: flex; gap: 2px; }
+
+    nav a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+
+    nav a:hover  { background: var(--bg-elevated); color: var(--text-primary); }
+    nav a.active { color: var(--accent); background: var(--accent-soft); }
+
+    /* ── Main ────────────────────────────────────── */
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 24px 64px;
+    }
+
+    .page-title {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .page-subtitle {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 28px;
+    }
+
+    /* ── Stats row ───────────────────────────────── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 22px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+    }
+
+    .stat-value {
+      font-size: 30px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .stat-sub {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* ── Filter bar ──────────────────────────────── */
+    .filter-bar {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 18px;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .filter-bar select,
+    .filter-bar input[type="text"],
+    .filter-bar input[type="date"] {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--text-primary);
+      padding: 7px 11px;
+      font-family: var(--font);
+      font-size: 13px;
+      transition: border-color 0.15s;
+      appearance: none;
+    }
+
+    .filter-bar select { padding-right: 28px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238B8FA8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; }
+
+    .filter-bar select:focus,
+    .filter-bar input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .filter-bar input::placeholder { color: var(--text-secondary); }
+
+    .filter-bar select option { background: var(--bg-elevated); }
+
+    .filter-sep { width: 1px; height: 28px; background: var(--border); margin: 0 2px; flex-shrink: 0; }
+
+    .btn-reset {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--text-secondary);
+      padding: 7px 14px;
+      font-family: var(--font);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .btn-reset:hover { border-color: var(--accent); color: var(--accent); }
+
+    .filter-count {
+      margin-left: auto;
+      font-size: 12px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    /* ── Table toolbar ───────────────────────────── */
+    .table-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+    }
+
+    .btn-danger {
+      background: none;
+      border: 1px solid rgba(248,113,113,0.3);
+      border-radius: 7px;
+      color: var(--error);
+      padding: 6px 14px;
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-danger:hover { background: rgba(248,113,113,0.08); }
+
+    /* ── Table ───────────────────────────────────── */
+    .table-wrap {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead th {
+      background: var(--bg-elevated);
+      padding: 11px 14px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      user-select: none;
+      white-space: nowrap;
+      border-bottom: 1px solid var(--border);
+    }
+
+    thead th.sortable { cursor: pointer; transition: color 0.15s; }
+    thead th.sortable:hover { color: var(--text-primary); }
+    thead th.sort-active { color: var(--accent); }
+
+    .sort-arrow { margin-left: 4px; font-size: 10px; }
+
+    tbody tr.data-row {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s;
+      cursor: default;
+    }
+
+    tbody tr.data-row:last-of-type:not(:has(+ .expand-row)) { border-bottom: none; }
+
+    tbody tr.data-row:hover { background: var(--bg-elevated); }
+
+    tbody td {
+      padding: 12px 14px;
+      font-size: 13px;
+      color: var(--text-primary);
+      vertical-align: middle;
+    }
+
+    .td-num { color: var(--text-secondary); font-size: 12px; width: 40px; }
+
+    .td-time { color: var(--text-secondary); font-size: 12px; white-space: nowrap; }
+
+    .td-cid { font-weight: 500; }
+
+    .td-nba {
+      max-width: 220px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+
+    .td-actions { white-space: nowrap; }
+
+    /* Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .resolved-yes { color: var(--success); font-size: 13px; }
+    .resolved-no  { color: var(--error);   font-size: 13px; }
+
+    /* Action buttons */
+    .btn-icon {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-secondary);
+      padding: 4px 9px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-right: 4px;
+    }
+
+    .btn-icon:hover          { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+    .btn-icon.active         { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+    .btn-icon.btn-delete:hover { border-color: var(--error); color: var(--error); background: rgba(248,113,113,0.08); }
+
+    /* ── Expanded detail row ─────────────────────── */
+    .expand-row td {
+      padding: 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .expand-row:last-child td { border-bottom: none; }
+
+    .expand-inner {
+      padding: 18px 20px;
+      background: rgba(91,106,240,0.04);
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .expand-section label {
+      display: block;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .expand-section p {
+      font-size: 13px;
+      color: var(--text-primary);
+      line-height: 1.6;
+    }
+
+    .expand-nba {
+      grid-column: 1 / -1;
+      background: var(--bg-elevated);
+      border: 1px solid rgba(91,106,240,0.25);
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+
+    .expand-nba label { color: var(--accent); }
+
+    .topics-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+
+    .topic-chip {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 9px;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    /* ── Empty state ─────────────────────────────── */
+    .empty-state {
+      text-align: center;
+      padding: 64px 24px;
+    }
+
+    .empty-icon { font-size: 40px; margin-bottom: 14px; }
+
+    .empty-title {
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .empty-sub {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+    }
+
+    .btn-primary {
+      display: inline-block;
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      padding: 10px 22px;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: opacity 0.15s;
+    }
+
+    .btn-primary:hover { opacity: 0.88; }
+
+    /* ── Responsive ──────────────────────────────── */
+    @media (max-width: 768px) {
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      nav a:not(.active) { display: none; }
+      .expand-inner { grid-template-columns: 1fr; }
+      .expand-nba { grid-column: 1; }
+      td.td-nba, th.th-nba { display: none; }
+    }
+
+    @media (max-width: 480px) {
+      .stats-row { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ──────────────────────────────────────────── -->
+<header>
+  <div class="logo">
+    🎧 <span class="accent">Advisor</span>AI
+    <span class="logo-sub">Contact Centre Intel</span>
+  </div>
+  <nav>
+    <a href="index.html">Analyse Call</a>
+    <a href="dashboard.html" class="active">Dashboard</a>
+    <a href="#">Customer Profiles</a>
+    <a href="#">Metrics</a>
+  </nav>
+</header>
+
+<main>
+  <div class="page-title">Call History Dashboard</div>
+  <div class="page-subtitle">All analysed calls, searchable and filterable. Data lives in your browser's localStorage.</div>
+
+  <!-- ── Stats row ─────────────────────────────────────── -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">Total Calls</div>
+      <div class="stat-value" id="statTotal">—</div>
+      <div class="stat-sub" id="statTotalSub">analysed calls</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Resolved</div>
+      <div class="stat-value" id="statResolved" style="color:var(--success)">—</div>
+      <div class="stat-sub" id="statResolvedSub">first-contact resolution</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Top Intent</div>
+      <div class="stat-value" id="statTopIntent" style="font-size:20px;text-transform:capitalize;">—</div>
+      <div class="stat-sub" id="statTopIntentSub">most common intent</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Avg Sentiment</div>
+      <div class="stat-value" id="statSentiment" style="font-size:20px;">—</div>
+      <div class="stat-sub" id="statSentimentSub">across all calls</div>
+    </div>
+  </div>
+
+  <!-- ── Filter bar ─────────────────────────────────────── -->
+  <div class="filter-bar">
+    <select id="filterIntent" onchange="applyFilters()">
+      <option value="">All Intents</option>
+      <option value="booking">Booking</option>
+      <option value="cancellation">Cancellation</option>
+      <option value="complaint">Complaint</option>
+      <option value="upsell">Upsell</option>
+      <option value="refund">Refund</option>
+      <option value="general">General</option>
+    </select>
+
+    <select id="filterSentiment" onchange="applyFilters()">
+      <option value="">All Sentiments</option>
+      <option value="positive">Positive</option>
+      <option value="neutral">Neutral</option>
+      <option value="negative">Negative</option>
+    </select>
+
+    <select id="filterResolved" onchange="applyFilters()">
+      <option value="">All Statuses</option>
+      <option value="yes">Resolved</option>
+      <option value="no">Unresolved</option>
+    </select>
+
+    <div class="filter-sep"></div>
+
+    <input type="text" id="filterCustomer" placeholder="Search customer ID…"
+      oninput="applyFilters()" style="width:180px;">
+
+    <div class="filter-sep"></div>
+
+    <input type="date" id="filterFrom" onchange="applyFilters()" title="From date">
+    <input type="date" id="filterTo"   onchange="applyFilters()" title="To date">
+
+    <button class="btn-reset" onclick="resetFilters()">↺ Reset</button>
+
+    <span class="filter-count" id="filterCount"></span>
+  </div>
+
+  <!-- ── Table ──────────────────────────────────────────── -->
+  <div class="table-toolbar">
+    <span class="section-label">Call Log</span>
+    <button class="btn-danger" onclick="confirmClearAll()">🗑 Clear All History</button>
+  </div>
+
+  <div class="table-wrap" id="tableWrap">
+    <!-- populated by JS -->
+  </div>
+</main>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────────────
+let allRecords   = [];
+let filtered     = [];
+let sortKey      = 'timestamp';
+let sortDir      = 'desc';
+let expandedId   = null;
+
+// Intent / sentiment colour maps (matching index.html)
+const INTENT_COLORS = {
+  booking:      { bg:'rgba(59,130,246,0.12)',  border:'rgba(59,130,246,0.35)',  text:'#3B82F6' },
+  cancellation: { bg:'rgba(239,68,68,0.12)',   border:'rgba(239,68,68,0.35)',   text:'#EF4444' },
+  complaint:    { bg:'rgba(249,115,22,0.12)',  border:'rgba(249,115,22,0.35)',  text:'#F97316' },
+  upsell:       { bg:'rgba(16,185,129,0.12)',  border:'rgba(16,185,129,0.35)', text:'#10B981' },
+  refund:       { bg:'rgba(234,179,8,0.12)',   border:'rgba(234,179,8,0.35)',   text:'#EAB308' },
+  general:      { bg:'rgba(107,114,128,0.12)', border:'rgba(107,114,128,0.35)',text:'#6B7280' }
+};
+
+const SENTIMENT_COLORS = {
+  positive: { bg:'rgba(52,211,153,0.12)',  border:'rgba(52,211,153,0.35)',  text:'#34D399' },
+  neutral:  { bg:'rgba(107,114,128,0.12)', border:'rgba(107,114,128,0.35)', text:'#8B8FA8' },
+  negative: { bg:'rgba(248,113,113,0.12)', border:'rgba(248,113,113,0.35)', text:'#F87171' }
+};
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+(function init() {
+  allRecords = JSON.parse(localStorage.getItem('advisorai_history') || '[]');
+  computeStats(allRecords);
+  applyFilters();
+})();
+
+// ── Stats ─────────────────────────────────────────────────────────────────────
+function computeStats(records) {
+  const total = records.length;
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statTotalSub').textContent = total === 1 ? 'analysed call' : 'analysed calls';
+
+  if (total === 0) {
+    ['statResolved','statTopIntent','statSentiment'].forEach(id => {
+      document.getElementById(id).textContent = '—';
+    });
+    return;
+  }
+
+  // % Resolved
+  const resolvedCount = records.filter(r => r.resolved === true).length;
+  const pct = Math.round((resolvedCount / total) * 100);
+  document.getElementById('statResolved').textContent = pct + '%';
+  document.getElementById('statResolvedSub').textContent = `${resolvedCount} of ${total} calls resolved`;
+
+  // Top intent
+  const intentTally = {};
+  records.forEach(r => { if (r.intent) intentTally[r.intent] = (intentTally[r.intent] || 0) + 1; });
+  const topIntent = Object.entries(intentTally).sort((a,b) => b[1]-a[1])[0];
+  if (topIntent) {
+    const c = INTENT_COLORS[topIntent[0]] || INTENT_COLORS.general;
+    document.getElementById('statTopIntent').textContent  = topIntent[0];
+    document.getElementById('statTopIntent').style.color  = c.text;
+    document.getElementById('statTopIntentSub').textContent = `${topIntent[1]} call${topIntent[1]!==1?'s':''} with this intent`;
+  }
+
+  // Avg sentiment
+  const sentMap = { positive: 1, neutral: 0, negative: -1 };
+  const scores  = records.map(r => sentMap[r.sentiment] ?? 0);
+  const avg     = scores.reduce((a,b) => a+b, 0) / scores.length;
+  let sentLabel, sentColor;
+  if      (avg >  0.3) { sentLabel = 'Positive'; sentColor = '#34D399'; }
+  else if (avg < -0.3) { sentLabel = 'Negative'; sentColor = '#F87171'; }
+  else                 { sentLabel = 'Mixed';    sentColor = '#FBBF24'; }
+  document.getElementById('statSentiment').textContent  = sentLabel;
+  document.getElementById('statSentiment').style.color  = sentColor;
+  document.getElementById('statSentimentSub').textContent = `avg score ${avg.toFixed(2)} (−1 to +1)`;
+}
+
+// ── Filters ───────────────────────────────────────────────────────────────────
+function applyFilters() {
+  const intent   = document.getElementById('filterIntent').value;
+  const sentiment= document.getElementById('filterSentiment').value;
+  const resolved = document.getElementById('filterResolved').value;
+  const customer = document.getElementById('filterCustomer').value.trim().toLowerCase();
+  const fromDate = document.getElementById('filterFrom').value;
+  const toDate   = document.getElementById('filterTo').value;
+
+  filtered = allRecords.filter(r => {
+    if (intent    && r.intent    !== intent)    return false;
+    if (sentiment && r.sentiment !== sentiment) return false;
+    if (resolved === 'yes' && !r.resolved)      return false;
+    if (resolved === 'no'  &&  r.resolved)      return false;
+    if (customer  && !(r.customer_id || '').toLowerCase().includes(customer)) return false;
+    if (fromDate) {
+      const d = new Date(r.timestamp);
+      if (isNaN(d) || d < new Date(fromDate)) return false;
+    }
+    if (toDate) {
+      const d = new Date(r.timestamp);
+      if (isNaN(d) || d > new Date(toDate + 'T23:59:59')) return false;
+    }
+    return true;
+  });
+
+  sortRecords();
+  document.getElementById('filterCount').textContent =
+    filtered.length === allRecords.length
+      ? `${allRecords.length} records`
+      : `${filtered.length} of ${allRecords.length} records`;
+
+  renderTable();
+}
+
+function resetFilters() {
+  ['filterIntent','filterSentiment','filterResolved'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('filterCustomer').value = '';
+  document.getElementById('filterFrom').value = '';
+  document.getElementById('filterTo').value   = '';
+  applyFilters();
+}
+
+// ── Sorting ───────────────────────────────────────────────────────────────────
+function setSort(key) {
+  if (sortKey === key) {
+    sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortKey = key;
+    sortDir = key === 'timestamp' ? 'desc' : 'asc';
+  }
+  sortRecords();
+  renderTable();
+}
+
+function sortRecords() {
+  filtered.sort((a, b) => {
+    let va = a[sortKey] ?? '';
+    let vb = b[sortKey] ?? '';
+    if (sortKey === 'timestamp') { va = new Date(va); vb = new Date(vb); }
+    if (sortKey === 'resolved')  { va = va ? 1 : 0;   vb = vb ? 1 : 0; }
+    if (va < vb) return sortDir === 'asc' ? -1 :  1;
+    if (va > vb) return sortDir === 'asc' ?  1 : -1;
+    return 0;
+  });
+}
+
+function sortArrow(key) {
+  if (sortKey !== key) return '<span class="sort-arrow" style="opacity:0.3">↕</span>';
+  return `<span class="sort-arrow">${sortDir === 'asc' ? '↑' : '↓'}</span>`;
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function renderTable() {
+  const wrap = document.getElementById('tableWrap');
+
+  if (allRecords.length === 0) {
+    wrap.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📋</div>
+        <div class="empty-title">No call history yet</div>
+        <div class="empty-sub">Analyse a call transcript on the main page to start building your history.</div>
+        <a href="index.html" class="btn-primary">Go to Analyse Call →</a>
+      </div>`;
+    return;
+  }
+
+  if (filtered.length === 0) {
+    wrap.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <div class="empty-title">No matching records</div>
+        <div class="empty-sub">Try adjusting your filters.</div>
+      </div>`;
+    return;
+  }
+
+  const cols = [
+    { key: null,       label: '#',           cls: 'td-num',  sortable: false },
+    { key: 'timestamp',label: 'Time',         cls: 'td-time', sortable: true  },
+    { key: 'customer_id',label:'Customer ID', cls: 'td-cid',  sortable: true  },
+    { key: 'intent',   label: 'Intent',       cls: '',        sortable: true  },
+    { key: 'sentiment',label: 'Sentiment',    cls: '',        sortable: true  },
+    { key: 'resolved', label: 'Resolved',     cls: '',        sortable: true  },
+    { key: 'next_best_action', label: 'NBA Preview', cls: 'td-nba th-nba', sortable: false },
+    { key: null,       label: 'Actions',      cls: '',        sortable: false }
+  ];
+
+  const headerCells = cols.map(col => {
+    const sortClass = col.sortable ? 'sortable' + (sortKey===col.key ? ' sort-active' : '') : '';
+    const onclick   = col.sortable ? `onclick="setSort('${col.key}')"` : '';
+    return `<th class="${col.cls} ${sortClass}" ${onclick}>${col.label}${col.sortable ? sortArrow(col.key) : ''}</th>`;
+  }).join('');
+
+  const rows = filtered.map((r, i) => {
+    const ic = INTENT_COLORS[r.intent]    || INTENT_COLORS.general;
+    const sc = SENTIMENT_COLORS[r.sentiment] || SENTIMENT_COLORS.neutral;
+    const isExpanded = expandedId === r.id;
+
+    const intentBadge = `<span class="badge" style="background:${ic.bg};border:1px solid ${ic.border};color:${ic.text};">${esc(r.intent||'—')}</span>`;
+    const sentBadge   = `<span class="badge" style="background:${sc.bg};border:1px solid ${sc.border};color:${sc.text};">${esc(r.sentiment||'—')}</span>`;
+    const resolvedCell= r.resolved
+      ? '<span class="resolved-yes">✓</span>'
+      : '<span class="resolved-no">✗</span>';
+
+    const timeStr = r.timestamp
+      ? new Date(r.timestamp).toLocaleString('en-GB', { dateStyle:'short', timeStyle:'short' })
+      : '—';
+
+    const dataRow = `
+      <tr class="data-row" data-id="${r.id}">
+        <td class="td-num">${i + 1}</td>
+        <td class="td-time">${timeStr}</td>
+        <td class="td-cid">${esc(r.customer_id || 'Unknown')}</td>
+        <td>${intentBadge}</td>
+        <td>${sentBadge}</td>
+        <td style="text-align:center;">${resolvedCell}</td>
+        <td class="td-nba">${esc(r.next_best_action || '—')}</td>
+        <td class="td-actions">
+          <button class="btn-icon ${isExpanded ? 'active' : ''}" title="View details" onclick="toggleExpand(${r.id})">👁</button>
+          <button class="btn-icon btn-delete" title="Delete record" onclick="deleteRecord(${r.id})">🗑</button>
+        </td>
+      </tr>`;
+
+    if (!isExpanded) return dataRow;
+
+    const topics = (r.key_topics || []).map(t => `<span class="topic-chip">${esc(t)}</span>`).join('');
+
+    const expandRow = `
+      <tr class="expand-row">
+        <td colspan="8">
+          <div class="expand-inner">
+            <div class="expand-section">
+              <label>Summary</label>
+              <p>${esc(r.summary || '—')}</p>
+            </div>
+            <div class="expand-section">
+              <label>Resolution Notes</label>
+              <p>${esc(r.resolution_notes || '—')}</p>
+              ${topics ? `<div class="topics-row" style="margin-top:10px;">${topics}</div>` : ''}
+            </div>
+            <div class="expand-section expand-nba">
+              <label>⚡ Next Best Action</label>
+              <p>${esc(r.next_best_action || '—')}</p>
+            </div>
+          </div>
+        </td>
+      </tr>`;
+
+    return dataRow + expandRow;
+  }).join('');
+
+  wrap.innerHTML = `
+    <table>
+      <thead><tr>${headerCells}</tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+// ── Expand / collapse ─────────────────────────────────────────────────────────
+function toggleExpand(id) {
+  expandedId = (expandedId === id) ? null : id;
+  renderTable();
+}
+
+// ── Delete ────────────────────────────────────────────────────────────────────
+function deleteRecord(id) {
+  allRecords = allRecords.filter(r => r.id !== id);
+  if (expandedId === id) expandedId = null;
+  localStorage.setItem('advisorai_history', JSON.stringify(allRecords));
+  computeStats(allRecords);
+  applyFilters();
+}
+
+function confirmClearAll() {
+  if (allRecords.length === 0) return;
+  if (!confirm(`Delete all ${allRecords.length} call records? This cannot be undone.`)) return;
+  allRecords   = [];
+  expandedId   = null;
+  localStorage.removeItem('advisorai_history');
+  computeStats([]);
+  applyFilters();
+}
+
+// ── XSS escape ────────────────────────────────────────────────────────────────
+function esc(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+</script>
+
+</body>
+</html>

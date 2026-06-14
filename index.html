@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AdvisorAI — Contact Centre Intel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary:    #0F1117;
+      --bg-surface:    #1A1D27;
+      --bg-elevated:   #222536;
+      --border:        #2E3250;
+      --accent:        #5B6AF0;
+      --accent-soft:   rgba(91,106,240,0.12);
+      --text-primary:  #E8E9F0;
+      --text-secondary:#8B8FA8;
+      --success:       #34D399;
+      --warning:       #FBBF24;
+      --error:         #F87171;
+      --font:          'Inter', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* ── Header ─────────────────────────────────── */
+    header {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 28px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .logo .accent { color: var(--accent); }
+
+    .logo-sub {
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--text-secondary);
+      margin-left: 4px;
+    }
+
+    nav { display: flex; gap: 2px; }
+
+    nav a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+
+    nav a:hover { background: var(--bg-elevated); color: var(--text-primary); }
+    nav a.active { color: var(--accent); background: var(--accent-soft); }
+
+    /* ── Main layout ─────────────────────────────── */
+    main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 32px 24px 64px;
+    }
+
+    /* ── Settings panel ──────────────────────────── */
+    .settings-panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+
+    .settings-toggle {
+      width: 100%;
+      background: none;
+      border: none;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      text-align: left;
+      transition: color 0.15s;
+    }
+
+    .settings-toggle:hover { color: var(--text-primary); }
+
+    .settings-status {
+      margin-left: 4px;
+      font-size: 12px;
+    }
+
+    .chevron {
+      margin-left: auto;
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+
+    .settings-toggle.open .chevron { transform: rotate(180deg); }
+
+    .settings-body {
+      display: none;
+      padding: 0 20px 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .settings-body.open { display: block; }
+
+    .settings-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin: 14px 0 12px;
+      line-height: 1.6;
+    }
+
+    .api-key-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .api-key-row input {
+      flex: 1;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-primary);
+      padding: 10px 14px;
+      font-family: var(--font);
+      font-size: 13px;
+      transition: border-color 0.15s;
+    }
+
+    .api-key-row input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .api-key-row input::placeholder { color: var(--text-secondary); }
+
+    .api-key-status {
+      font-size: 12px;
+      margin-top: 8px;
+    }
+
+    .api-key-status.saved  { color: var(--success); }
+    .api-key-status.missing { color: var(--warning); }
+
+    /* ── Transcript area ─────────────────────────── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+    }
+
+    .sample-buttons {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn-sample {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-secondary);
+      padding: 6px 14px;
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-sample:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    textarea {
+      width: 100%;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text-primary);
+      padding: 16px;
+      font-family: var(--font);
+      font-size: 14px;
+      line-height: 1.7;
+      resize: vertical;
+      min-height: 210px;
+      transition: border-color 0.15s;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    textarea::placeholder { color: var(--text-secondary); }
+
+    .input-row {
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+      margin-top: 14px;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .field-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    input[type="text"] {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-primary);
+      padding: 10px 14px;
+      font-family: var(--font);
+      font-size: 14px;
+      width: 220px;
+      transition: border-color 0.15s;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    input[type="text"]::placeholder { color: var(--text-secondary); }
+
+    /* ── Buttons ─────────────────────────────────── */
+    .btn-primary {
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      padding: 10px 24px;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      white-space: nowrap;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-secondary {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-secondary);
+      padding: 10px 16px;
+      font-family: var(--font);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--error);
+      color: var(--error);
+    }
+
+    /* ── Skeleton loader ─────────────────────────── */
+    #skeleton { display: none; margin-top: 28px; }
+    #skeleton.visible { display: block; }
+
+    .skeleton-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .sk-bar {
+      background: var(--bg-elevated);
+      border-radius: 5px;
+      height: 13px;
+      margin-bottom: 10px;
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+
+    .sk-bar.w100 { width: 100%; }
+    .sk-bar.w70  { width: 70%; }
+    .sk-bar.w45  { width: 45%; }
+    .sk-bar.w30  { width: 30%; }
+    .sk-bar.h20  { height: 20px; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.35; }
+      50%       { opacity: 0.7; }
+    }
+
+    .sk-badge-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .sk-badge {
+      background: var(--bg-elevated);
+      border-radius: 20px;
+      height: 28px;
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+
+    .sk-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* ── Results ─────────────────────────────────── */
+    #results { display: none; margin-top: 28px; }
+    #results.visible { display: block; }
+
+    /* Warning */
+    .warning-banner {
+      background: rgba(251,191,36,0.09);
+      border: 1px solid rgba(251,191,36,0.3);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      color: var(--warning);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .warning-icon { flex-shrink: 0; font-size: 16px; }
+
+    /* Error */
+    .error-banner {
+      background: rgba(248,113,113,0.09);
+      border: 1px solid rgba(248,113,113,0.3);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      color: var(--error);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .card-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+
+    .summary-text {
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--text-primary);
+    }
+
+    .resolution-note {
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      font-style: italic;
+    }
+
+    .topics-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .topic-chip {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 3px 10px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* Badges */
+    .badges-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* NBA card */
+    .nba-card {
+      border-color: rgba(91,106,240,0.3);
+      background: linear-gradient(135deg, var(--bg-surface) 0%, rgba(91,106,240,0.05) 100%);
+    }
+
+    .nba-text {
+      font-size: 15px;
+      color: var(--text-primary);
+      line-height: 1.6;
+    }
+
+    /* Confidence */
+    .confidence-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: 6px;
+    }
+
+    .confidence-score {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .conf-track {
+      flex: 1;
+      height: 6px;
+      background: var(--bg-elevated);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .conf-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.6s ease;
+    }
+
+    /* Bottom grid */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* History note */
+    .history-note {
+      text-align: center;
+      padding: 20px 0 4px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      display: none;
+    }
+
+    .history-note a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .history-note a:hover { text-decoration: underline; }
+
+    @media (max-width: 620px) {
+      .cards-grid { grid-template-columns: 1fr; }
+      .input-row  { flex-direction: column; align-items: stretch; }
+      input[type="text"] { width: 100%; }
+      nav a { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ──────────────────────────────────────────── -->
+<header>
+  <div class="logo">
+    🎧 <span class="accent">Advisor</span>AI
+    <span class="logo-sub">Contact Centre Intel</span>
+  </div>
+  <nav>
+    <a href="index.html" class="active">Analyse Call</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="#">Customer Profiles</a>
+    <a href="#">Metrics</a>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ── API Key Settings ─────────────────────────────── -->
+  <div class="settings-panel">
+    <button class="settings-toggle" id="settingsToggle" onclick="toggleSettings()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+      API Settings
+      <span class="settings-status" id="settingsStatus"></span>
+      <svg class="chevron" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="6 9 12 15 18 9"/>
+      </svg>
+    </button>
+
+    <div class="settings-body" id="settingsBody">
+      <p class="settings-desc">
+        Enter your Groq API key. It is stored only in your browser's <code>localStorage</code> and is sent directly to Groq — never to any third party.
+      </p>
+      <div class="api-key-row">
+        <input type="password" id="apiKeyInput" placeholder="gsk_…" autocomplete="off" spellcheck="false">
+        <button class="btn-primary" onclick="saveApiKey()" style="padding:10px 18px;font-size:13px;">Save Key</button>
+        <button class="btn-secondary" onclick="clearApiKey()">Clear</button>
+      </div>
+      <div class="api-key-status" id="apiKeyStatus"></div>
+    </div>
+  </div>
+
+  <!-- ── Transcript Input ─────────────────────────────── -->
+  <div style="margin-bottom:24px;">
+    <div class="section-label">Paste Call Transcript</div>
+
+    <div class="sample-buttons">
+      <button class="btn-sample" onclick="loadSample(1)">📋 Sample 1 — Booking (Positive)</button>
+      <button class="btn-sample" onclick="loadSample(2)">😤 Sample 2 — Complaint (Negative)</button>
+      <button class="btn-sample" onclick="loadSample(3)">⚡ Sample 3 — Upsell Opportunity</button>
+    </div>
+
+    <textarea id="transcript" rows="10"
+      placeholder="Paste a call transcript here, or click a sample above to load one…"></textarea>
+
+    <div class="input-row">
+      <div class="field-group">
+        <span class="field-label">Customer ID (optional)</span>
+        <input type="text" id="customerId" placeholder="e.g. CUST-1042">
+      </div>
+      <button class="btn-primary" id="analyseBtn" onclick="analyseCall()">
+        Analyse Call ▶
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Loading Skeleton ─────────────────────────────── -->
+  <div id="skeleton">
+    <div class="skeleton-card">
+      <div class="sk-bar w30 h20" style="margin-bottom:16px;"></div>
+      <div class="sk-bar w100"></div>
+      <div class="sk-bar w100"></div>
+      <div class="sk-bar w70" style="margin-bottom:0;"></div>
+    </div>
+    <div class="sk-badge-row">
+      <div class="sk-badge" style="width:130px;"></div>
+      <div class="sk-badge" style="width:150px;"></div>
+      <div class="sk-badge" style="width:110px;"></div>
+    </div>
+    <div class="skeleton-card">
+      <div class="sk-bar w30 h20" style="margin-bottom:16px;"></div>
+      <div class="sk-bar w100"></div>
+      <div class="sk-bar w70" style="margin-bottom:0;"></div>
+    </div>
+    <div class="sk-grid">
+      <div class="skeleton-card">
+        <div class="sk-bar w45 h20" style="margin-bottom:16px;"></div>
+        <div class="sk-bar w70" style="margin-bottom:0;"></div>
+      </div>
+      <div class="skeleton-card">
+        <div class="sk-bar w45 h20" style="margin-bottom:16px;"></div>
+        <div class="sk-bar w60" style="margin-bottom:0;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Results ──────────────────────────────────────── -->
+  <div id="results"></div>
+
+  <!-- ── History note ─────────────────────────────────── -->
+  <div class="history-note" id="historyNote">
+    ✓ Analysis saved to history
+  </div>
+
+</main>
+
+<script>
+// ── Sample transcripts ────────────────────────────────────────────────────────
+const SAMPLES = {
+  1: `Agent: Thank you for calling Chase Travel, my name is Sarah. How can I help you today?
+Customer: Hi Sarah, I'd like to book a round trip from New York to London in business class for two passengers in March.
+Agent: Absolutely, I'd be happy to help with that. Do you have specific dates in mind?
+Customer: We're flexible between March 10th and March 20th. We'd prefer British Airways if possible and we'd like to use our points to offset the cost.
+Agent: Great choice. I can see you have 180,000 Chase Ultimate Rewards points which would cover about $1,800 off the fare. I'm finding availability on March 12th returning March 19th on British Airways. The total would be $3,200 per person minus the $1,800 credit, so $4,600 for both. Shall I proceed?
+Customer: That sounds perfect, yes please go ahead.
+Agent: Wonderful, I've confirmed your booking. You'll receive a confirmation email shortly. Is there anything else I can help you with?
+Customer: No that's everything, thank you so much!
+Agent: Have a wonderful trip to London!`,
+
+  2: `Agent: Chase Travel, this is Mike speaking. How can I assist you?
+Customer: I am absolutely furious right now. I booked a flight two months ago and I just found out it was cancelled. Nobody contacted me, I found out by checking my email randomly.
+Agent: I sincerely apologise for that experience. Let me pull up your booking right away. Can I get your booking reference?
+Customer: It's CHT-88423. I have a conference I need to attend. This is completely unacceptable. I need to be in Chicago by Monday morning no matter what.
+Agent: I can see the cancellation — the airline cancelled this flight due to operational reasons. I'm very sorry you weren't notified proactively. I have a few options for you: I can rebook you on an alternative flight Sunday evening arriving 9pm, or Monday morning arriving 7am, or I can process a full refund.
+Customer: The Sunday evening flight works. But I want compensation for this. I nearly missed finding out entirely.
+Agent: Understood. I'm rebooking you now on the Sunday flight and I'll apply a $150 travel credit to your account as an apology. You'll get a new confirmation in the next few minutes.
+Customer: Fine. But I'm not happy about this.`,
+
+  3: `Agent: Good afternoon, Chase Travel, you're speaking with James.
+Customer: Hi, I need to book a one-way ticket to Miami for next Friday.
+Agent: Of course. Any preference on airline or time of day?
+Customer: Cheapest option is fine. I usually just go economy.
+Agent: I have a Spirit Airlines flight at 6am for $89, or a Delta flight at 11am for $134. The Delta flight includes a carry-on bag which the Spirit fare doesn't.
+Customer: I'll go with Spirit I guess. Oh wait, I do have a carry-on.
+Agent: In that case the Spirit fare would actually be $89 plus $65 for the bag, so $154 total versus Delta at $134 all-in. Delta would actually be cheaper for you.
+Customer: Oh wow I didn't realise. Yeah let's do Delta then.
+Agent: Smart choice. And I can see you have 23,000 points — this $134 fare is eligible for a points boost promotion this week, you'd earn triple points on this booking.
+Customer: Oh nice, yes definitely book it with that promotion.
+Agent: All confirmed! Anything else I can help with today?
+Customer: No that's great, thanks for the tip about the bag fee!`
+};
+
+// ── System prompt (verbatim from brief) ──────────────────────────────────────
+const SYSTEM_PROMPT = `You are an AI assistant that analyses customer service call transcripts for a travel and financial services contact centre.
+
+You MUST respond with valid JSON only. No preamble, no explanation, no markdown code fences. Just the raw JSON object.
+
+Your response must match this exact schema:
+{
+  "summary": "string — 2 to 3 sentences summarising what happened on the call",
+  "intent": "string — exactly one of: booking | cancellation | complaint | upsell | general | refund",
+  "sentiment": "string — exactly one of: positive | neutral | negative",
+  "resolved": boolean,
+  "resolution_notes": "string — one sentence on what was resolved or what remains open",
+  "next_best_action": "string — one sentence recommendation for what the advisor should do next or follow up on",
+  "key_topics": ["array", "of", "up", "to", "5", "topic", "strings"],
+  "confidence": number between 0 and 1,
+  "warning": "string or null — flag if transcript is too short, unclear, or if you are uncertain about any field"
+}
+
+Rules:
+- If the transcript is fewer than 50 words, set confidence below 0.5 and add a warning.
+- If you cannot determine intent clearly, set intent to general.
+- resolved must be true only if the customer's primary issue was fully addressed.
+- Never invent information not present in the transcript.`;
+
+// ── Colour maps ───────────────────────────────────────────────────────────────
+const INTENT_COLORS = {
+  booking:      { bg:'rgba(59,130,246,0.12)',  border:'rgba(59,130,246,0.35)',  text:'#3B82F6' },
+  cancellation: { bg:'rgba(239,68,68,0.12)',   border:'rgba(239,68,68,0.35)',   text:'#EF4444' },
+  complaint:    { bg:'rgba(249,115,22,0.12)',  border:'rgba(249,115,22,0.35)',  text:'#F97316' },
+  upsell:       { bg:'rgba(16,185,129,0.12)',  border:'rgba(16,185,129,0.35)', text:'#10B981' },
+  refund:       { bg:'rgba(234,179,8,0.12)',   border:'rgba(234,179,8,0.35)',   text:'#EAB308' },
+  general:      { bg:'rgba(107,114,128,0.12)', border:'rgba(107,114,128,0.35)',text:'#6B7280' }
+};
+
+const SENTIMENT_COLORS = {
+  positive: { bg:'rgba(52,211,153,0.12)',  border:'rgba(52,211,153,0.35)',  text:'#34D399' },
+  neutral:  { bg:'rgba(107,114,128,0.12)', border:'rgba(107,114,128,0.35)', text:'#8B8FA8' },
+  negative: { bg:'rgba(248,113,113,0.12)', border:'rgba(248,113,113,0.35)', text:'#F87171' }
+};
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+(function init() {
+  const key = localStorage.getItem('advisorai_groq_key');
+  if (key) {
+    document.getElementById('apiKeyInput').value = key;
+    setApiStatus(true);
+  } else {
+    setApiStatus(false);
+    openSettings();
+  }
+})();
+
+// ── Settings helpers ──────────────────────────────────────────────────────────
+function toggleSettings() {
+  const body = document.getElementById('settingsBody');
+  const btn  = document.getElementById('settingsToggle');
+  body.classList.toggle('open');
+  btn.classList.toggle('open');
+}
+
+function openSettings() {
+  document.getElementById('settingsBody').classList.add('open');
+  document.getElementById('settingsToggle').classList.add('open');
+}
+
+function closeSettings() {
+  document.getElementById('settingsBody').classList.remove('open');
+  document.getElementById('settingsToggle').classList.remove('open');
+}
+
+function saveApiKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (!key) return;
+  localStorage.setItem('advisorai_groq_key', key);
+  setApiStatus(true);
+  closeSettings();
+}
+
+function clearApiKey() {
+  localStorage.removeItem('advisorai_groq_key');
+  document.getElementById('apiKeyInput').value = '';
+  setApiStatus(false);
+}
+
+function setApiStatus(saved) {
+  const status  = document.getElementById('apiKeyStatus');
+  const inline  = document.getElementById('settingsStatus');
+  if (saved) {
+    status.textContent = '✓ Groq API key saved in localStorage';
+    status.className   = 'api-key-status saved';
+    inline.textContent = '✓ Key saved';
+    inline.style.color = 'var(--success)';
+  } else {
+    status.textContent = '⚠ No API key — enter your Groq key above to get started';
+    status.className   = 'api-key-status missing';
+    inline.textContent = '⚠ No key';
+    inline.style.color = 'var(--warning)';
+  }
+}
+
+// ── Load sample ───────────────────────────────────────────────────────────────
+function loadSample(n) {
+  document.getElementById('transcript').value = SAMPLES[n];
+}
+
+// ── Main analysis ─────────────────────────────────────────────────────────────
+async function analyseCall() {
+  const transcript = document.getElementById('transcript').value.trim();
+  const customerId = document.getElementById('customerId').value.trim();
+  const apiKey     = localStorage.getItem('advisorai_groq_key');
+
+  if (!transcript) {
+    alert('Please paste a transcript or load a sample first.');
+    return;
+  }
+
+  if (!apiKey) {
+    alert('Please enter your Anthropic API key in the settings panel above.');
+    openSettings();
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    const result = await callGroqAPI(transcript, apiKey);
+    renderResults(result, customerId, transcript);
+    saveToHistory(result, transcript, customerId);
+    document.getElementById('historyNote').style.display = 'block';
+  } catch (err) {
+    renderError(err.message);
+  } finally {
+    setLoading(false);
+  }
+}
+
+// ── Groq API call ─────────────────────────────────────────────────────────────
+async function callGroqAPI(transcript, apiKey) {
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type':  'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: 'llama-3.3-70b-versatile',
+      temperature: 0.3,
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user',   content: `Analyse this call transcript:\n\n---\n${transcript}\n---` }
+      ]
+    })
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.error?.message || `API error ${res.status}`);
+  }
+
+  const data = await res.json();
+  const text = data.choices?.[0]?.message?.content;
+  if (!text) throw new Error('Empty response from Groq — check your API key and quota.');
+  return parseResponse(text);
+}
+
+// ── JSON parsing with fallback ────────────────────────────────────────────────
+function parseResponse(raw) {
+  // Attempt 1: raw parse
+  try { return JSON.parse(raw); } catch (_) {}
+
+  // Attempt 2: strip markdown fences
+  const stripped = raw
+    .replace(/^```json\s*/i, '')
+    .replace(/^```\s*/i, '')
+    .replace(/\s*```$/i, '')
+    .trim();
+  try { return JSON.parse(stripped); } catch (_) {}
+
+  throw new Error('The AI returned an unexpected format. Please try again.');
+}
+
+// ── Render results ────────────────────────────────────────────────────────────
+function renderResults(r, customerId, transcript) {
+  const intentC    = INTENT_COLORS[r.intent]    || INTENT_COLORS.general;
+  const sentimentC = SENTIMENT_COLORS[r.sentiment] || SENTIMENT_COLORS.neutral;
+  const resolvedC  = r.resolved
+    ? { bg:'rgba(52,211,153,0.12)',  border:'rgba(52,211,153,0.35)',  text:'#34D399' }
+    : { bg:'rgba(248,113,113,0.12)', border:'rgba(248,113,113,0.35)', text:'#F87171' };
+
+  const confidencePct = Math.round((r.confidence || 0) * 100);
+  const barColor = r.confidence >= 0.7 ? '#34D399' : r.confidence >= 0.4 ? '#FBBF24' : '#F87171';
+
+  const sentimentIcon = r.sentiment === 'positive' ? '😊' : r.sentiment === 'negative' ? '😞' : '😐';
+
+  const topicsHTML = (r.key_topics || [])
+    .map(t => `<span class="topic-chip">${esc(t)}</span>`).join('');
+
+  const warningHTML = r.warning
+    ? `<div class="warning-banner">
+         <span class="warning-icon">⚠️</span>
+         <span>${esc(r.warning)}</span>
+       </div>`
+    : '';
+
+  const html = `
+    ${warningHTML}
+
+    <div class="card">
+      <div class="card-label">📋 Call Summary</div>
+      <div class="summary-text">${esc(r.summary)}</div>
+      <div class="resolution-note">${esc(r.resolution_notes)}</div>
+      ${topicsHTML ? `<div class="topics-row">${topicsHTML}</div>` : ''}
+    </div>
+
+    <div class="badges-row">
+      <span class="badge" style="background:${intentC.bg};border:1px solid ${intentC.border};color:${intentC.text};">
+        INTENT: ${esc((r.intent || 'general').toUpperCase())}
+      </span>
+      <span class="badge" style="background:${sentimentC.bg};border:1px solid ${sentimentC.border};color:${sentimentC.text};">
+        ${sentimentIcon} ${esc((r.sentiment || 'neutral').toUpperCase())}
+      </span>
+      <span class="badge" style="background:${resolvedC.bg};border:1px solid ${resolvedC.border};color:${resolvedC.text};">
+        ${r.resolved ? '✓ RESOLVED' : '✗ UNRESOLVED'}
+      </span>
+    </div>
+
+    <div class="card nba-card">
+      <div class="card-label">⚡ Next Best Action</div>
+      <div class="nba-text">${esc(r.next_best_action)}</div>
+    </div>
+
+    <div class="cards-grid">
+      <div class="card">
+        <div class="card-label">🛡️ AI Confidence</div>
+        <div class="confidence-row">
+          <div class="confidence-score">${confidencePct}%</div>
+          <div class="conf-track">
+            <div class="conf-fill" style="width:${confidencePct}%;background:${barColor};"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-label">👤 Customer</div>
+        <div style="font-size:15px;color:var(--text-primary);margin-bottom:4px;">
+          ${customerId ? esc(customerId) : '<span style="color:var(--text-secondary)">Unknown</span>'}
+        </div>
+        <div style="font-size:12px;color:var(--text-secondary);">
+          ${new Date().toLocaleString('en-GB', { dateStyle:'medium', timeStyle:'short' })}
+        </div>
+      </div>
+    </div>
+  `;
+
+  const el = document.getElementById('results');
+  el.innerHTML = html;
+  el.classList.add('visible');
+}
+
+function renderError(msg) {
+  const el = document.getElementById('results');
+  el.innerHTML = `<div class="error-banner">❌ <strong>Analysis failed:</strong> ${esc(msg)}</div>`;
+  el.classList.add('visible');
+}
+
+// ── Save to history ───────────────────────────────────────────────────────────
+function saveToHistory(analysisResult, transcript, customerId) {
+  const record = {
+    id: Date.now(),
+    timestamp: new Date().toISOString(),
+    customer_id: customerId || 'Unknown',
+    transcript_snippet: transcript.slice(0, 150) + '...',
+    ...analysisResult
+  };
+  const history = JSON.parse(localStorage.getItem('advisorai_history') || '[]');
+  history.unshift(record);
+  localStorage.setItem('advisorai_history', JSON.stringify(history));
+}
+
+// ── UI state ──────────────────────────────────────────────────────────────────
+function setLoading(on) {
+  const btn       = document.getElementById('analyseBtn');
+  const skeleton  = document.getElementById('skeleton');
+  const results   = document.getElementById('results');
+  const histNote  = document.getElementById('historyNote');
+
+  if (on) {
+    btn.disabled     = true;
+    btn.textContent  = 'Analysing…';
+    skeleton.classList.add('visible');
+    results.classList.remove('visible');
+    results.innerHTML = '';
+    histNote.style.display = 'none';
+  } else {
+    btn.disabled     = false;
+    btn.textContent  = 'Analyse Call ▶';
+    skeleton.classList.remove('visible');
+  }
+}
+
+// ── XSS escaping ──────────────────────────────────────────────────────────────
+function esc(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+</script>
+
+</body>
+</html>
