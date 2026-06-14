@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AdvisorAI — Customer Profiles</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary:    #0F1117;
+      --bg-surface:    #1A1D27;
+      --bg-elevated:   #222536;
+      --border:        #2E3250;
+      --accent:        #5B6AF0;
+      --accent-soft:   rgba(91,106,240,0.12);
+      --text-primary:  #E8E9F0;
+      --text-secondary:#8B8FA8;
+      --success:       #34D399;
+      --warning:       #FBBF24;
+      --error:         #F87171;
+      --font:          'Inter', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* ── Header ─────────────────────────────────── */
+    header {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 28px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .logo { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; }
+    .logo .accent { color: var(--accent); }
+    .logo-sub { font-size: 12px; font-weight: 400; color: var(--text-secondary); margin-left: 4px; }
+
+    nav { display: flex; gap: 2px; }
+    nav a { color: var(--text-secondary); text-decoration: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; transition: all 0.15s; }
+    nav a:hover  { background: var(--bg-elevated); color: var(--text-primary); }
+    nav a.active { color: var(--accent); background: var(--accent-soft); }
+
+    /* ── Main ────────────────────────────────────── */
+    main { max-width: 820px; margin: 0 auto; padding: 32px 24px 64px; }
+
+    .page-title   { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+    .page-subtitle { font-size: 14px; color: var(--text-secondary); margin-bottom: 28px; }
+
+    /* ── Search bar ──────────────────────────────── */
+    .search-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 22px;
+      margin-bottom: 24px;
+    }
+
+    .search-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+    }
+
+    .search-row { display: flex; gap: 10px; }
+
+    .search-row input {
+      flex: 1;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-primary);
+      padding: 10px 14px;
+      font-family: var(--font);
+      font-size: 14px;
+      transition: border-color 0.15s;
+    }
+
+    .search-row input:focus { outline: none; border-color: var(--accent); }
+    .search-row input::placeholder { color: var(--text-secondary); }
+
+    .btn-primary {
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      padding: 10px 22px;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      white-space: nowrap;
+    }
+
+    .btn-primary:hover { opacity: 0.88; }
+
+    /* recent customers */
+    .recent-label { font-size: 12px; color: var(--text-secondary); margin-top: 12px; margin-bottom: 6px; }
+    .recent-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+    .chip {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .chip:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Profile content ─────────────────────────── */
+    #profileContent { display: none; }
+    #profileContent.visible { display: block; }
+
+    /* Summary card */
+    .summary-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 22px 24px;
+      margin-bottom: 24px;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .avatar {
+      width: 56px;
+      height: 56px;
+      background: var(--accent-soft);
+      border: 1px solid rgba(91,106,240,0.3);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .profile-name {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .profile-sub {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .profile-meta {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .meta-item label {
+      display: block;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+
+    .meta-item span {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* Trend badge */
+    .trend-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    /* ── Timeline ────────────────────────────────── */
+    .timeline-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+    }
+
+    .timeline { position: relative; }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 19px;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: var(--border);
+    }
+
+    .timeline-item {
+      position: relative;
+      padding-left: 50px;
+      margin-bottom: 16px;
+    }
+
+    .timeline-dot {
+      position: absolute;
+      left: 12px;
+      top: 16px;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      border: 2px solid var(--bg-primary);
+      flex-shrink: 0;
+    }
+
+    .timeline-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 18px;
+      transition: border-color 0.15s;
+    }
+
+    .timeline-card:hover { border-color: rgba(91,106,240,0.3); }
+
+    .timeline-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .timeline-time {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-left: auto;
+      white-space: nowrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .resolved-yes { color: var(--success); font-size: 12px; font-weight: 600; }
+    .resolved-no  { color: var(--error);   font-size: 12px; font-weight: 600; }
+
+    .timeline-summary {
+      font-size: 13px;
+      color: var(--text-primary);
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+
+    .nba-snippet {
+      background: var(--bg-elevated);
+      border-left: 2px solid var(--accent);
+      border-radius: 0 6px 6px 0;
+      padding: 8px 12px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .nba-snippet strong { color: var(--accent); font-weight: 600; }
+
+    /* ── Analyse CTA ─────────────────────────────── */
+    .analyse-cta {
+      background: var(--accent-soft);
+      border: 1px solid rgba(91,106,240,0.3);
+      border-radius: 10px;
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .cta-text { font-size: 14px; color: var(--text-primary); }
+    .cta-sub  { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+
+    .btn-cta {
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      padding: 9px 18px;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      text-decoration: none;
+      transition: opacity 0.15s;
+    }
+
+    .btn-cta:hover { opacity: 0.88; }
+
+    /* ── Empty / not found ───────────────────────── */
+    .empty-state {
+      text-align: center;
+      padding: 52px 24px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    .empty-icon  { font-size: 38px; margin-bottom: 12px; }
+    .empty-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+    .empty-sub   { font-size: 13px; color: var(--text-secondary); }
+
+    @media (max-width: 640px) {
+      .profile-meta { grid-template-columns: repeat(2, 1fr); }
+      .summary-card { grid-template-columns: 1fr; }
+      nav a:not(.active) { display: none; }
+      .analyse-cta { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    🎧 <span class="accent">Advisor</span>AI
+    <span class="logo-sub">Contact Centre Intel</span>
+  </div>
+  <nav>
+    <a href="index.html">Analyse Call</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="profile.html" class="active">Customer Profiles</a>
+    <a href="#">Metrics</a>
+  </nav>
+</header>
+
+<main>
+  <div class="page-title">Customer Profiles</div>
+  <div class="page-subtitle">Search any Customer ID to view their full interaction history and satisfaction trend.</div>
+
+  <!-- ── Search ──────────────────────────────────── -->
+  <div class="search-card">
+    <div class="search-label">Look up customer</div>
+    <div class="search-row">
+      <input type="text" id="customerIdInput" placeholder="Enter Customer ID, e.g. CUST-1042"
+        onkeydown="if(event.key==='Enter') searchCustomer()">
+      <button class="btn-primary" onclick="searchCustomer()">Search</button>
+    </div>
+    <div id="recentWrap" style="display:none;">
+      <div class="recent-label">Recent customers in history</div>
+      <div class="recent-chips" id="recentChips"></div>
+    </div>
+  </div>
+
+  <!-- ── Profile ─────────────────────────────────── -->
+  <div id="profileContent"></div>
+</main>
+
+<script>
+const INTENT_COLORS = {
+  booking:      { bg:'rgba(59,130,246,0.12)',  border:'rgba(59,130,246,0.35)',  text:'#3B82F6' },
+  cancellation: { bg:'rgba(239,68,68,0.12)',   border:'rgba(239,68,68,0.35)',   text:'#EF4444' },
+  complaint:    { bg:'rgba(249,115,22,0.12)',  border:'rgba(249,115,22,0.35)',  text:'#F97316' },
+  upsell:       { bg:'rgba(16,185,129,0.12)',  border:'rgba(16,185,129,0.35)', text:'#10B981' },
+  refund:       { bg:'rgba(234,179,8,0.12)',   border:'rgba(234,179,8,0.35)',   text:'#EAB308' },
+  general:      { bg:'rgba(107,114,128,0.12)', border:'rgba(107,114,128,0.35)',text:'#6B7280' }
+};
+
+const SENTIMENT_COLORS = {
+  positive: { bg:'rgba(52,211,153,0.12)',  border:'rgba(52,211,153,0.35)',  text:'#34D399' },
+  neutral:  { bg:'rgba(107,114,128,0.12)', border:'rgba(107,114,128,0.35)', text:'#8B8FA8' },
+  negative: { bg:'rgba(248,113,113,0.12)', border:'rgba(248,113,113,0.35)', text:'#F87171' }
+};
+
+const DOT_COLORS = { positive:'#34D399', neutral:'#8B8FA8', negative:'#F87171' };
+
+// ── Init: populate recent chips ───────────────────────────────────────────────
+(function init() {
+  const history  = loadHistory();
+  const ids      = [...new Set(history.map(r => r.customer_id).filter(id => id && id !== 'Unknown'))];
+  const recentWrap = document.getElementById('recentWrap');
+  if (ids.length > 0) {
+    recentWrap.style.display = 'block';
+    document.getElementById('recentChips').innerHTML =
+      ids.slice(0, 8).map(id =>
+        `<span class="chip" onclick="quickSearch('${esc(id)}')">${esc(id)}</span>`
+      ).join('');
+  }
+
+  // auto-search if ?id= param is in URL
+  const param = new URLSearchParams(window.location.search).get('id');
+  if (param) {
+    document.getElementById('customerIdInput').value = param;
+    searchCustomer();
+  }
+})();
+
+function loadHistory() {
+  return JSON.parse(localStorage.getItem('advisorai_history') || '[]');
+}
+
+function quickSearch(id) {
+  document.getElementById('customerIdInput').value = id;
+  searchCustomer();
+}
+
+// ── Search ────────────────────────────────────────────────────────────────────
+function searchCustomer() {
+  const customerId = document.getElementById('customerIdInput').value.trim();
+  if (!customerId) return;
+
+  const history  = loadHistory();
+  const records  = history
+    .filter(r => (r.customer_id || '').toLowerCase() === customerId.toLowerCase())
+    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+  const el = document.getElementById('profileContent');
+  el.classList.add('visible');
+
+  if (records.length === 0) {
+    el.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">👤</div>
+        <div class="empty-title">No records found for "${esc(customerId)}"</div>
+        <div class="empty-sub">This customer hasn't been analysed yet, or the ID doesn't match any saved records.</div>
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = buildProfileHTML(customerId, records);
+}
+
+// ── Build profile HTML ────────────────────────────────────────────────────────
+function buildProfileHTML(customerId, records) {
+  // ── Summary stats ──
+  const total     = records.length;
+  const lastCall  = new Date(records[0].timestamp);
+  const daysAgo   = Math.floor((Date.now() - lastCall) / 86400000);
+  const lastLabel = daysAgo === 0 ? 'Today'
+                  : daysAgo === 1 ? 'Yesterday'
+                  : `${daysAgo} days ago`;
+
+  // Top intent
+  const intentTally = {};
+  records.forEach(r => { if (r.intent) intentTally[r.intent] = (intentTally[r.intent] || 0) + 1; });
+  const topIntent = Object.entries(intentTally).sort((a,b) => b[1]-a[1])[0]?.[0] || '—';
+
+  // Satisfaction trend (compare first half vs second half)
+  const sentMap  = { positive: 1, neutral: 0, negative: -1 };
+  const scores   = records.map(r => sentMap[r.sentiment] ?? 0);
+  const avg      = scores.reduce((a,b)=>a+b,0) / scores.length;
+
+  let trendLabel, trendColor, trendIcon;
+  if (records.length >= 2) {
+    const recent = scores.slice(0, Math.ceil(scores.length / 2));
+    const older  = scores.slice(Math.ceil(scores.length / 2));
+    const recentAvg = recent.reduce((a,b)=>a+b,0)/recent.length;
+    const olderAvg  = older.reduce((a,b)=>a+b,0)/older.length;
+    const diff = recentAvg - olderAvg;
+    if      (diff >  0.2) { trendLabel = 'Improving'; trendColor = '#34D399'; trendIcon = '↑'; }
+    else if (diff < -0.2) { trendLabel = 'Declining';  trendColor = '#F87171'; trendIcon = '↓'; }
+    else                  { trendLabel = 'Stable';      trendColor = '#FBBF24'; trendIcon = '→'; }
+  } else {
+    trendLabel = avg >= 0 ? 'Positive' : 'Negative';
+    trendColor = avg >= 0 ? '#34D399'  : '#F87171';
+    trendIcon  = '';
+  }
+
+  const ic = INTENT_COLORS[topIntent] || INTENT_COLORS.general;
+
+  const summaryCard = `
+    <div class="summary-card">
+      <div class="avatar">👤</div>
+      <div>
+        <div class="profile-name">${esc(customerId)}</div>
+        <div class="profile-sub">Last contact: ${lastLabel} &nbsp;·&nbsp; ${total} call${total!==1?'s':''} on record</div>
+        <div class="profile-meta">
+          <div class="meta-item">
+            <label>Total Calls</label>
+            <span>${total}</span>
+          </div>
+          <div class="meta-item">
+            <label>Last Contact</label>
+            <span style="font-size:13px;">${lastLabel}</span>
+          </div>
+          <div class="meta-item">
+            <label>Top Intent</label>
+            <span style="color:${ic.text};text-transform:capitalize;font-size:13px;">${esc(topIntent)}</span>
+          </div>
+          <div class="meta-item">
+            <label>Satisfaction Trend</label>
+            <span class="trend-badge" style="background:${trendColor}18;color:${trendColor};font-size:12px;">
+              ${trendIcon} ${trendLabel}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+  // ── Timeline ──
+  const timelineItems = records.map(r => {
+    const ic = INTENT_COLORS[r.intent]    || INTENT_COLORS.general;
+    const sc = SENTIMENT_COLORS[r.sentiment] || SENTIMENT_COLORS.neutral;
+    const dotColor = DOT_COLORS[r.sentiment] || '#8B8FA8';
+    const timeStr = new Date(r.timestamp).toLocaleString('en-GB', { dateStyle:'medium', timeStyle:'short' });
+
+    return `
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background:${dotColor};"></div>
+        <div class="timeline-card">
+          <div class="timeline-top">
+            <span class="badge" style="background:${ic.bg};border:1px solid ${ic.border};color:${ic.text};">${esc(r.intent||'—')}</span>
+            <span class="badge" style="background:${sc.bg};border:1px solid ${sc.border};color:${sc.text};">${esc(r.sentiment||'—')}</span>
+            ${r.resolved
+              ? '<span class="resolved-yes">✓ Resolved</span>'
+              : '<span class="resolved-no">✗ Unresolved</span>'}
+            <span class="timeline-time">${timeStr}</span>
+          </div>
+          <div class="timeline-summary">${esc(r.summary || r.transcript_snippet || '—')}</div>
+          <div class="nba-snippet"><strong>NBA:</strong> ${esc(r.next_best_action || '—')}</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  const cta = `
+    <div class="analyse-cta">
+      <div>
+        <div class="cta-text">Analyse a new call for this customer</div>
+        <div class="cta-sub">Their history will be automatically injected into the AI prompt for a personalised analysis.</div>
+      </div>
+      <a class="btn-cta" href="index.html?customer=${encodeURIComponent(customerId)}">
+        Analyse Call →
+      </a>
+    </div>`;
+
+  return `
+    ${summaryCard}
+    <div class="timeline-header">
+      <span class="section-label">Interaction History (${total})</span>
+    </div>
+    <div class="timeline">${timelineItems}</div>
+    ${cta}`;
+}
+
+function esc(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+</script>
+
+</body>
+</html>

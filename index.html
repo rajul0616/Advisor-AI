@@ -545,7 +545,7 @@
   <nav>
     <a href="index.html" class="active">Analyse Call</a>
     <a href="dashboard.html">Dashboard</a>
-    <a href="#">Customer Profiles</a>
+    <a href="profile.html">Customer Profiles</a>
     <a href="#">Metrics</a>
   </nav>
 </header>
@@ -728,6 +728,9 @@ const SENTIMENT_COLORS = {
     setApiStatus(false);
     openSettings();
   }
+  // Auto-fill Customer ID if arriving from profile.html
+  const param = new URLSearchParams(window.location.search).get('customer');
+  if (param) document.getElementById('customerId').value = param;
 })();
 
 // ── Settings helpers ──────────────────────────────────────────────────────────
@@ -803,7 +806,7 @@ async function analyseCall() {
   setLoading(true);
 
   try {
-    const result = await callGroqAPI(transcript, apiKey);
+    const result = await callGroqAPI(transcript, apiKey, customerId);
     renderResults(result, customerId, transcript);
     saveToHistory(result, transcript, customerId);
     document.getElementById('historyNote').style.display = 'block';
@@ -814,8 +817,41 @@ async function analyseCall() {
   }
 }
 
+// ── RAG: build user message with optional customer history ────────────────────
+function buildPrompt(transcript, customerId) {
+  let contextBlock = '';
+
+  if (customerId) {
+    const history = JSON.parse(localStorage.getItem('advisorai_history') || '[]');
+    const customerHistory = history
+      .filter(r => (r.customer_id || '').toLowerCase() === customerId.toLowerCase())
+      .slice(0, 3);
+
+    if (customerHistory.length > 0) {
+      contextBlock = `CUSTOMER HISTORY CONTEXT (last ${customerHistory.length} interaction${customerHistory.length !== 1 ? 's' : ''}):
+${customerHistory.map((r, i) => `
+Interaction ${i + 1} — ${new Date(r.timestamp).toLocaleDateString()}:
+- Intent: ${r.intent}
+- Sentiment: ${r.sentiment}
+- Summary: ${r.summary}
+- Was Resolved: ${r.resolved}
+- NBA at the time: ${r.next_best_action}
+`).join('')}
+Use this context to:
+1. Note if this customer is a repeat caller with unresolved issues
+2. Personalise the Next Best Action based on their history
+3. Flag in your warning field if this customer has had 2+ negative interactions
+
+---
+`;
+    }
+  }
+
+  return `${contextBlock}Analyse this call transcript:\n\n---\n${transcript}\n---`;
+}
+
 // ── Groq API call ─────────────────────────────────────────────────────────────
-async function callGroqAPI(transcript, apiKey) {
+async function callGroqAPI(transcript, apiKey, customerId) {
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -827,7 +863,7 @@ async function callGroqAPI(transcript, apiKey) {
       temperature: 0.3,
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user',   content: `Analyse this call transcript:\n\n---\n${transcript}\n---` }
+        { role: 'user',   content: buildPrompt(transcript, customerId) }
       ]
     })
   });
