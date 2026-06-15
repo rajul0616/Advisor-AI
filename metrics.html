@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AdvisorAI — Metrics Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg-primary:    #0F1117;
+      --bg-surface:    #1A1D27;
+      --bg-elevated:   #222536;
+      --border:        #2E3250;
+      --accent:        #5B6AF0;
+      --accent-soft:   rgba(91,106,240,0.12);
+      --text-primary:  #E8E9F0;
+      --text-secondary:#8B8FA8;
+      --success:       #34D399;
+      --warning:       #FBBF24;
+      --error:         #F87171;
+      --font:          'Inter', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* ── Header ─────────────────────────────────── */
+    header {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 28px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .logo .accent { color: var(--accent); }
+    .logo-sub {
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--text-secondary);
+      margin-left: 4px;
+    }
+
+    nav { display: flex; gap: 2px; }
+
+    nav a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+
+    nav a:hover  { background: var(--bg-elevated); color: var(--text-primary); }
+    nav a.active { color: var(--accent); background: var(--accent-soft); }
+
+    /* ── Main ───────────────────────────────────── */
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 24px 64px;
+    }
+
+    .page-title {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .page-subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 28px;
+    }
+
+    /* ── Empty state ────────────────────────────── */
+    .empty-state {
+      text-align: center;
+      padding: 80px 24px;
+      color: var(--text-secondary);
+    }
+
+    .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
+    .empty-state h3 { font-size: 18px; color: var(--text-primary); margin-bottom: 8px; }
+    .empty-state p { font-size: 14px; margin-bottom: 20px; }
+    .empty-state a {
+      display: inline-block;
+      background: var(--accent);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    /* ── KPI row ────────────────────────────────── */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    @media (max-width: 700px) {
+      .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .kpi-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .kpi-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .kpi-value {
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .kpi-sub {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* NPS card colours */
+    .nps-excellent { color: var(--success); }
+    .nps-good      { color: #4ADE80; }
+    .nps-ok        { color: var(--warning); }
+    .nps-critical  { color: var(--error); }
+
+    /* ── Charts grid ────────────────────────────── */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 800px) {
+      .charts-grid { grid-template-columns: 1fr; }
+    }
+
+    .chart-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+    }
+
+    .chart-card.full-width {
+      grid-column: 1 / -1;
+    }
+
+    .chart-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .chart-title {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .chart-meta {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .chart-wrap {
+      position: relative;
+    }
+
+    /* doughnut wrapper — constrain height */
+    .chart-wrap.doughnut {
+      max-width: 260px;
+      margin: 0 auto;
+    }
+
+    /* ── NBA Themes ──────────────────────────────── */
+    .theme-list {
+      list-style: none;
+    }
+
+    .theme-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .theme-item:last-child { border-bottom: none; }
+
+    .theme-rank {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      width: 20px;
+      flex-shrink: 0;
+      text-align: right;
+    }
+
+    .theme-bar-wrap {
+      flex: 1;
+    }
+
+    .theme-word {
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .theme-bar-track {
+      height: 4px;
+      background: var(--bg-elevated);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .theme-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 0.6s ease;
+    }
+
+    .theme-count {
+      font-size: 12px;
+      color: var(--text-secondary);
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header>
+  <div class="logo">
+    🎧 <span>Advisor<span class="accent">AI</span></span>
+    <span class="logo-sub">Contact Centre Intel</span>
+  </div>
+  <nav>
+    <a href="index.html">Analyse Call</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="profile.html">Customer Profiles</a>
+    <a href="metrics.html" class="active">Metrics</a>
+  </nav>
+</header>
+
+<!-- ── Main ── -->
+<main>
+  <div class="page-title">Metrics Dashboard</div>
+  <div class="page-subtitle">Trends and analytics across all analysed calls</div>
+
+  <div id="app"></div>
+</main>
+
+<script>
+  // ── Helpers ──────────────────────────────────────────────────────────────
+
+  const INTENT_COLOURS = {
+    booking:      '#3B82F6',
+    cancellation: '#EF4444',
+    complaint:    '#F97316',
+    upsell:       '#10B981',
+    refund:       '#EAB308',
+    general:      '#6B7280'
+  };
+
+  const STOP_WORDS = new Set([
+    'a','an','the','and','or','but','in','on','at','to','for','of','with',
+    'by','from','is','was','are','were','be','been','being','have','has',
+    'had','do','does','did','will','would','could','should','may','might',
+    'this','that','these','those','it','its','they','them','their','we',
+    'our','you','your','he','she','his','her','i','my','me','us','not',
+    'so','if','as','up','out','about','into','than','then','when','where',
+    'who','which','what','how','all','any','each','more','also','can','the',
+    'call','customer','advisor','please','need','like','just','get','make'
+  ]);
+
+  function sentimentScore(s) {
+    return s === 'positive' ? 1 : s === 'negative' ? -1 : 0;
+  }
+
+  function weekLabel(dateStr) {
+    const d = new Date(dateStr);
+    // Start of week (Monday)
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    const mon = new Date(d.setDate(diff));
+    return mon.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+  }
+
+  function dayLabel(dateStr) {
+    return new Date(dateStr).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+  }
+
+  function simulateNPS(history) {
+    if (!history.length) return null;
+    const promoters  = history.filter(r => r.sentiment === 'positive').length;
+    const detractors = history.filter(r => r.sentiment === 'negative').length;
+    return Math.round(((promoters - detractors) / history.length) * 100);
+  }
+
+  function npsContext(nps) {
+    if (nps === null) return { label: '—', cls: '', desc: 'No data' };
+    if (nps > 50)  return { label: nps, cls: 'nps-excellent', desc: 'Excellent' };
+    if (nps >= 20) return { label: nps, cls: 'nps-good',      desc: 'Good' };
+    if (nps >= 0)  return { label: nps, cls: 'nps-ok',        desc: 'Needs improvement' };
+    return              { label: nps, cls: 'nps-critical',   desc: 'Critical' };
+  }
+
+  function extractThemes(history, topN = 10) {
+    const freq = {};
+    history.forEach(r => {
+      if (!r.next_best_action) return;
+      r.next_best_action
+        .toLowerCase()
+        .replace(/[^a-z\s-]/g, '')
+        .split(/\s+/)
+        .filter(w => w.length > 3 && !STOP_WORDS.has(w))
+        .forEach(w => { freq[w] = (freq[w] || 0) + 1; });
+    });
+    return Object.entries(freq)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, topN);
+  }
+
+  // ── Main render ──────────────────────────────────────────────────────────
+
+  function render() {
+    const history = JSON.parse(localStorage.getItem('advisorai_history') || '[]');
+    const app = document.getElementById('app');
+
+    if (!history.length) {
+      app.innerHTML = `
+        <div class="empty-state">
+          <div class="icon">📊</div>
+          <h3>No data yet</h3>
+          <p>Analyse some calls first — metrics will appear here automatically.</p>
+          <a href="index.html">Analyse a Call →</a>
+        </div>`;
+      return;
+    }
+
+    // ── KPI calculations ────────────────────────────────────────────────
+
+    const totalCalls   = history.length;
+    const resolvedPct  = Math.round((history.filter(r => r.resolved).length / totalCalls) * 100);
+    const avgSentScore = history.reduce((s, r) => s + sentimentScore(r.sentiment), 0) / totalCalls;
+    const avgSentLabel = avgSentScore > 0.3 ? 'Positive' : avgSentScore < -0.3 ? 'Negative' : 'Mixed';
+    const nps          = simulateNPS(history);
+    const npsCtx       = npsContext(nps);
+
+    // ── Intent counts ────────────────────────────────────────────────────
+
+    const intentCounts = history.reduce((acc, r) => {
+      acc[r.intent] = (acc[r.intent] || 0) + 1;
+      return acc;
+    }, {});
+
+    // ── Sentiment by day ─────────────────────────────────────────────────
+
+    const byDay = {};
+    history.forEach(r => {
+      const d = dayLabel(r.timestamp);
+      if (!byDay[d]) byDay[d] = [];
+      byDay[d].push(sentimentScore(r.sentiment));
+    });
+    const dayKeys   = Object.keys(byDay).sort((a, b) => new Date(a) - new Date(b));
+    const dayScores = dayKeys.map(d => +(byDay[d].reduce((s, v) => s + v, 0) / byDay[d].length).toFixed(2));
+
+    // ── Resolution by week ───────────────────────────────────────────────
+
+    const byWeek = {};
+    history.forEach(r => {
+      const w = weekLabel(r.timestamp);
+      if (!byWeek[w]) byWeek[w] = { total: 0, resolved: 0 };
+      byWeek[w].total++;
+      if (r.resolved) byWeek[w].resolved++;
+    });
+    const weekKeys    = Object.keys(byWeek).sort();
+    const weekRates   = weekKeys.map(w => Math.round((byWeek[w].resolved / byWeek[w].total) * 100));
+
+    // ── NBA themes ───────────────────────────────────────────────────────
+
+    const themes    = extractThemes(history);
+    const maxThemeCount = themes[0]?.[1] || 1;
+
+    // ── Build HTML ───────────────────────────────────────────────────────
+
+    const sentColour = avgSentScore > 0.3 ? '#34D399' : avgSentScore < -0.3 ? '#F87171' : '#FBBF24';
+
+    app.innerHTML = `
+      <!-- KPI row -->
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-label">Total Calls</div>
+          <div class="kpi-value" style="color:var(--accent)">${totalCalls}</div>
+          <div class="kpi-sub">All time</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Resolution Rate</div>
+          <div class="kpi-value" style="color:var(--success)">${resolvedPct}%</div>
+          <div class="kpi-sub">FCR benchmark: 75%</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Avg Sentiment</div>
+          <div class="kpi-value" style="color:${sentColour}">${avgSentLabel}</div>
+          <div class="kpi-sub">Score: ${avgSentScore.toFixed(2)}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Simulated NPS</div>
+          <div class="kpi-value ${npsCtx.cls}">${npsCtx.label}</div>
+          <div class="kpi-sub">${npsCtx.desc}</div>
+        </div>
+      </div>
+
+      <!-- Charts row 1 -->
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-header">
+            <div class="chart-title">Intent Breakdown</div>
+            <div class="chart-meta">${totalCalls} calls</div>
+          </div>
+          <div class="chart-wrap doughnut">
+            <canvas id="intentChart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <div class="chart-title">Top NBA Themes</div>
+            <div class="chart-meta">Word frequency in recommendations</div>
+          </div>
+          <ul class="theme-list" id="themeList"></ul>
+        </div>
+      </div>
+
+      <!-- Charts row 2 -->
+      <div class="charts-grid">
+        <div class="chart-card full-width">
+          <div class="chart-header">
+            <div class="chart-title">Sentiment Trend</div>
+            <div class="chart-meta">Daily average (−1 negative → +1 positive)</div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="sentimentChart" height="90"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card full-width">
+          <div class="chart-header">
+            <div class="chart-title">Resolution Rate by Week</div>
+            <div class="chart-meta">% of calls fully resolved · Target: 75%</div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="resolutionChart" height="80"></canvas>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // ── Theme list ───────────────────────────────────────────────────────
+
+    const themeList = document.getElementById('themeList');
+    if (!themes.length) {
+      themeList.innerHTML = '<li style="color:var(--text-secondary);font-size:13px;padding:12px 0">Not enough NBA data yet.</li>';
+    } else {
+      themeList.innerHTML = themes.map(([word, count], i) => `
+        <li class="theme-item">
+          <span class="theme-rank">${i + 1}</span>
+          <div class="theme-bar-wrap">
+            <div class="theme-word">${word}</div>
+            <div class="theme-bar-track">
+              <div class="theme-bar-fill" style="width:${Math.round((count / maxThemeCount) * 100)}%"></div>
+            </div>
+          </div>
+          <span class="theme-count">${count}×</span>
+        </li>`).join('');
+    }
+
+    // ── Chart defaults ───────────────────────────────────────────────────
+
+    Chart.defaults.color = '#8B8FA8';
+    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.font.size = 12;
+
+    const gridColor  = 'rgba(46,50,80,0.6)';
+    const tickColor  = '#8B8FA8';
+
+    // ── Intent doughnut ──────────────────────────────────────────────────
+
+    const intentLabels = Object.keys(intentCounts);
+    const intentData   = intentLabels.map(k => intentCounts[k]);
+    const intentBg     = intentLabels.map(k => INTENT_COLOURS[k] || '#6B7280');
+
+    new Chart(document.getElementById('intentChart'), {
+      type: 'doughnut',
+      data: {
+        labels: intentLabels.map(l => l.charAt(0).toUpperCase() + l.slice(1)),
+        datasets: [{
+          data: intentData,
+          backgroundColor: intentBg,
+          borderColor: '#1A1D27',
+          borderWidth: 3,
+          hoverOffset: 6
+        }]
+      },
+      options: {
+        cutout: '65%',
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              padding: 14,
+              boxWidth: 10,
+              boxHeight: 10,
+              color: '#8B8FA8'
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: ctx => ` ${ctx.label}: ${ctx.raw} call${ctx.raw !== 1 ? 's' : ''}`
+            }
+          }
+        }
+      }
+    });
+
+    // ── Sentiment line chart ─────────────────────────────────────────────
+
+    const sentGradientCtx = document.getElementById('sentimentChart').getContext('2d');
+    const sentGrad = sentGradientCtx.createLinearGradient(0, 0, 0, 200);
+    sentGrad.addColorStop(0, 'rgba(91,106,240,0.25)');
+    sentGrad.addColorStop(1, 'rgba(91,106,240,0.01)');
+
+    new Chart(document.getElementById('sentimentChart'), {
+      type: 'line',
+      data: {
+        labels: dayKeys.length ? dayKeys : ['No data'],
+        datasets: [
+          {
+            label: 'Avg Sentiment',
+            data: dayScores.length ? dayScores : [0],
+            borderColor: '#5B6AF0',
+            backgroundColor: sentGrad,
+            borderWidth: 2,
+            pointRadius: 4,
+            pointBackgroundColor: '#5B6AF0',
+            tension: 0.35,
+            fill: true
+          },
+          {
+            label: 'Neutral baseline',
+            data: (dayKeys.length ? dayKeys : ['No data']).map(() => 0),
+            borderColor: 'rgba(139,143,168,0.35)',
+            borderWidth: 1,
+            borderDash: [5, 4],
+            pointRadius: 0,
+            fill: false
+          }
+        ]
+      },
+      options: {
+        scales: {
+          x: { grid: { color: gridColor }, ticks: { color: tickColor } },
+          y: {
+            min: -1, max: 1,
+            grid: { color: gridColor },
+            ticks: {
+              color: tickColor,
+              callback: v => v === 1 ? 'Positive' : v === 0 ? 'Neutral' : v === -1 ? 'Negative' : v
+            }
+          }
+        },
+        plugins: {
+          legend: { labels: { color: '#8B8FA8', boxWidth: 12 } },
+          tooltip: {
+            callbacks: {
+              label: ctx => ctx.dataset.label === 'Neutral baseline'
+                ? null
+                : ` Score: ${ctx.raw}`
+            }
+          }
+        }
+      }
+    });
+
+    // ── Resolution bar chart ─────────────────────────────────────────────
+
+    new Chart(document.getElementById('resolutionChart'), {
+      type: 'bar',
+      data: {
+        labels: weekKeys.length ? weekKeys : ['No data'],
+        datasets: [
+          {
+            label: 'Resolution rate %',
+            data: weekRates.length ? weekRates : [0],
+            backgroundColor: weekRates.map(r => r >= 75 ? 'rgba(52,211,153,0.7)' : 'rgba(91,106,240,0.7)'),
+            borderRadius: 4,
+            borderSkipped: false
+          },
+          {
+            label: 'Target (75%)',
+            data: (weekKeys.length ? weekKeys : ['No data']).map(() => 75),
+            type: 'line',
+            borderColor: '#FBBF24',
+            borderWidth: 1.5,
+            borderDash: [5, 4],
+            pointRadius: 0,
+            fill: false
+          }
+        ]
+      },
+      options: {
+        scales: {
+          x: { grid: { color: gridColor }, ticks: { color: tickColor } },
+          y: {
+            min: 0, max: 100,
+            grid: { color: gridColor },
+            ticks: { color: tickColor, callback: v => `${v}%` }
+          }
+        },
+        plugins: {
+          legend: { labels: { color: '#8B8FA8', boxWidth: 12 } },
+          tooltip: {
+            callbacks: {
+              label: ctx => ctx.dataset.label === 'Target (75%)'
+                ? null
+                : ` ${ctx.raw}% resolved`
+            }
+          }
+        }
+      }
+    });
+  }
+
+  render();
+</script>
+</body>
+</html>
