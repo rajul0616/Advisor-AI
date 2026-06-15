@@ -7,6 +7,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     :root {
       --bg-primary:    #0F1117;
@@ -18,6 +20,7 @@
       --accent-soft:   rgba(91,106,240,0.12);
       --text-primary:  #E8E9F0;
       --text-secondary:#8B8FA8;
+      --success:       #34D399;
       --error:         #F87171;
       --error-soft:    rgba(248,113,113,0.1);
       --font:          'Inter', sans-serif;
@@ -37,7 +40,6 @@
       padding: 24px;
     }
 
-    /* ── Brand mark ────────────────────────────── */
     .brand {
       display: flex;
       align-items: center;
@@ -46,9 +48,7 @@
       font-weight: 700;
       margin-bottom: 8px;
     }
-
     .brand .accent { color: var(--accent); }
-
     .brand-sub {
       font-size: 13px;
       color: var(--text-secondary);
@@ -56,14 +56,14 @@
       text-align: center;
     }
 
-    /* ── Card ──────────────────────────────────── */
+    /* ── Card ─────────────────────────────────────── */
     .card {
       background: var(--bg-surface);
       border: 1px solid var(--border);
       border-radius: 16px;
       padding: 36px 32px;
       width: 100%;
-      max-width: 380px;
+      max-width: 400px;
     }
 
     .card-title {
@@ -71,51 +71,129 @@
       font-weight: 600;
       margin-bottom: 4px;
     }
-
     .card-subtitle {
       font-size: 13px;
       color: var(--text-secondary);
       margin-bottom: 28px;
+      line-height: 1.5;
     }
 
-    /* ── Form ──────────────────────────────────── */
-    .field {
-      margin-bottom: 16px;
+    /* ── Sign-in view ─────────────────────────────── */
+    #signinView { display: none; }
+
+    .google-btn-wrap {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+      /* GIS injects an iframe here */
     }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .change-link {
+      display: block;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .change-link:hover { color: var(--text-primary); }
+
+    /* ── Setup view ───────────────────────────────── */
+    #setupView { display: none; }
+
+    .steps {
+      list-style: none;
+      counter-reset: step;
+      margin-bottom: 24px;
+    }
+    .steps li {
+      counter-increment: step;
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text-secondary);
+    }
+    .steps li::before {
+      content: counter(step);
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+      background: var(--accent-soft);
+      border: 1px solid rgba(91,106,240,0.3);
+      border-radius: 50%;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1px;
+    }
+    .steps li a { color: var(--accent); text-decoration: none; }
+    .steps li a:hover { text-decoration: underline; }
+    .steps li strong { color: var(--text-primary); }
+
+    .field { margin-bottom: 16px; }
 
     label {
       display: block;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 600;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.07em;
       text-transform: uppercase;
       color: var(--text-secondary);
       margin-bottom: 6px;
     }
 
-    input {
+    input[type="text"] {
       width: 100%;
       background: var(--bg-elevated);
       border: 1px solid var(--border);
       border-radius: 8px;
       color: var(--text-primary);
       font-family: var(--font);
-      font-size: 14px;
+      font-size: 13px;
       padding: 10px 14px;
       outline: none;
       transition: border-color 0.15s;
     }
+    input[type="text"]:focus { border-color: var(--accent); }
+    input[type="text"]::placeholder { color: var(--text-secondary); opacity: 0.5; }
 
-    input:focus {
-      border-color: var(--accent);
+    .btn {
+      width: 100%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 600;
+      padding: 11px;
+      cursor: pointer;
+      transition: background 0.15s;
     }
+    .btn:hover { background: var(--accent-hover); }
 
-    input::placeholder {
-      color: var(--text-secondary);
-      opacity: 0.6;
-    }
-
-    /* ── Error banner ──────────────────────────── */
+    /* ── Error ────────────────────────────────────── */
     .error-banner {
       display: none;
       align-items: center;
@@ -128,49 +206,34 @@
       color: var(--error);
       margin-bottom: 16px;
     }
-
     .error-banner.visible { display: flex; }
 
-    /* ── Button ────────────────────────────────── */
-    .btn {
-      width: 100%;
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-family: var(--font);
-      font-size: 14px;
-      font-weight: 600;
-      padding: 11px;
-      cursor: pointer;
-      margin-top: 8px;
-      transition: background 0.15s, transform 0.1s;
+    /* ── Loading spinner ──────────────────────────── */
+    #loadingView {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 0;
     }
 
-    .btn:hover { background: var(--accent-hover); }
-    .btn:active { transform: scale(0.98); }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-    /* ── Demo hint ─────────────────────────────── */
-    .demo-hint {
-      margin-top: 24px;
-      padding: 14px;
-      background: var(--accent-soft);
-      border: 1px solid rgba(91,106,240,0.2);
-      border-radius: 8px;
-      font-size: 12px;
-      color: var(--text-secondary);
-      line-height: 1.7;
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
     }
 
-    .demo-hint strong { color: var(--text-primary); }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Footer ────────────────────────────────── */
     .footer {
-      margin-top: 28px;
+      margin-top: 24px;
       font-size: 12px;
       color: var(--text-secondary);
       text-align: center;
+      line-height: 1.6;
     }
   </style>
 </head>
@@ -180,121 +243,179 @@
   <p class="brand-sub">Contact Centre Intelligence Platform</p>
 
   <div class="card">
-    <div class="card-title">Sign in</div>
-    <div class="card-subtitle">Enter your credentials to access the dashboard</div>
 
-    <form id="loginForm" novalidate>
+    <!-- Loading while GIS initialises -->
+    <div id="loadingView" style="display:flex">
+      <div class="spinner"></div>
+      <span style="font-size:13px;color:var(--text-secondary)">Loading…</span>
+    </div>
+
+    <!-- ── Sign-in view ────────────────────────── -->
+    <div id="signinView">
+      <div class="card-title">Sign in with Google</div>
+      <div class="card-subtitle">Use your Google account to access AdvisorAI.</div>
 
       <div class="error-banner" id="errorBanner">
-        <span>⚠</span>
-        <span id="errorMsg">Incorrect username or password.</span>
+        <span>⚠</span><span id="errorMsg">Sign-in failed. Please try again.</span>
+      </div>
+
+      <div class="google-btn-wrap">
+        <div id="googleBtn"></div>
+      </div>
+
+      <div class="divider">or</div>
+      <span class="change-link" id="changeClientLink">Change Google Client ID</span>
+    </div>
+
+    <!-- ── Setup view ──────────────────────────── -->
+    <div id="setupView">
+      <div class="card-title">One-time setup</div>
+      <div class="card-subtitle">
+        AdvisorAI uses Google OAuth. You need a free Google Cloud Client ID to enable sign-in.
+      </div>
+
+      <ol class="steps">
+        <li>Go to <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">console.cloud.google.com/apis/credentials</a></li>
+        <li>Create a project, then click <strong>+ Create Credentials → OAuth client ID</strong></li>
+        <li>Choose <strong>Web application</strong>. Under <strong>Authorised JavaScript origins</strong> add:<br>
+          <code style="font-size:12px;color:var(--accent)">https://rajul0616.github.io</code>
+        </li>
+        <li>Click <strong>Create</strong>, copy the <strong>Client ID</strong> (ends in <code style="font-size:12px">.apps.googleusercontent.com</code>)</li>
+        <li>Paste it below and click <strong>Save & Continue</strong></li>
+      </ol>
+
+      <div class="error-banner" id="setupError">
+        <span>⚠</span><span id="setupErrorMsg">Please enter a valid Client ID.</span>
       </div>
 
       <div class="field">
-        <label for="username">Username</label>
+        <label for="clientIdInput">Google Client ID</label>
         <input
           type="text"
-          id="username"
-          name="username"
-          placeholder="Enter username"
-          autocomplete="username"
-          required
+          id="clientIdInput"
+          placeholder="xxxxxxxxxx.apps.googleusercontent.com"
+          autocomplete="off"
+          spellcheck="false"
         >
       </div>
 
-      <div class="field">
-        <label for="password">Password</label>
-        <input
-          type="password"
-          id="password"
-          name="password"
-          placeholder="Enter password"
-          autocomplete="current-password"
-          required
-        >
-      </div>
-
-      <button type="submit" class="btn" id="submitBtn">Sign In</button>
-
-    </form>
-
-    <div class="demo-hint">
-      <strong>Demo credentials</strong><br>
-      Username: <strong>advisor</strong><br>
-      Password: <strong>demo2024</strong>
+      <button class="btn" id="saveClientBtn">Save &amp; Continue</button>
     </div>
+
   </div>
 
-  <p class="footer">Session expires when you close the browser tab.</p>
+  <p class="footer">
+    Session ends when you close the browser tab.<br>
+    Signed-in user data is never sent to any server.
+  </p>
 
 <script>
-  // ── Credentials ───────────────────────────────────────────────────────
-  // Change these to update who can log in. Client-side only — not for
-  // production use. Suitable for portfolio/demo gating.
-  const VALID_USERS = [
-    { username: 'advisor', password: 'demo2024' }
-  ];
+  const CLIENT_ID_KEY = 'advisorai_google_client_id';
 
-  // If already authenticated, skip the login page
+  // Already authenticated — skip login
   if (sessionStorage.getItem('advisorai_auth') === '1') {
     const dest = new URLSearchParams(location.search).get('next') || 'index.html';
     location.replace(dest);
   }
 
-  const form      = document.getElementById('loginForm');
-  const errorEl   = document.getElementById('errorBanner');
-  const errorMsg  = document.getElementById('errorMsg');
-  const submitBtn = document.getElementById('submitBtn');
+  function showView(name) {
+    document.getElementById('loadingView').style.display = 'none';
+    document.getElementById('signinView').style.display  = name === 'signin' ? 'block' : 'none';
+    document.getElementById('setupView').style.display   = name === 'setup'  ? 'block' : 'none';
+  }
 
-  form.addEventListener('submit', e => {
-    e.preventDefault();
+  function decodeJWT(token) {
+    try {
+      const b64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      return JSON.parse(atob(b64));
+    } catch {
+      return null;
+    }
+  }
 
-    const username = document.getElementById('username').value.trim();
-    const password = document.getElementById('password').value;
-
-    const match = VALID_USERS.find(
-      u => u.username === username && u.password === password
-    );
-
-    if (!match) {
-      errorMsg.textContent = 'Incorrect username or password.';
-      errorEl.classList.add('visible');
-      document.getElementById('password').value = '';
-      document.getElementById('password').focus();
-      // Brief shake animation
-      form.style.animation = 'none';
-      requestAnimationFrame(() => {
-        form.style.animation = 'shake 0.3s ease';
-      });
+  function handleCredential(response) {
+    const payload = decodeJWT(response.credential);
+    if (!payload) {
+      showError('signinView', 'Could not parse Google credential. Please try again.');
       return;
     }
 
-    // Auth success
-    errorEl.classList.remove('visible');
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Signing in…';
-
     sessionStorage.setItem('advisorai_auth', '1');
-    sessionStorage.setItem('advisorai_user', username);
+    sessionStorage.setItem('advisorai_user', JSON.stringify({
+      name:    payload.name    || '',
+      email:   payload.email   || '',
+      picture: payload.picture || '',
+      sub:     payload.sub     || ''
+    }));
 
     const dest = new URLSearchParams(location.search).get('next') || 'index.html';
     location.replace(dest);
+  }
+
+  function showError(view, msg) {
+    if (view === 'signinView') {
+      document.getElementById('errorMsg').textContent = msg;
+      document.getElementById('errorBanner').classList.add('visible');
+    } else {
+      document.getElementById('setupErrorMsg').textContent = msg;
+      document.getElementById('setupError').classList.add('visible');
+    }
+  }
+
+  function initGoogleSignIn(clientId) {
+    google.accounts.id.initialize({
+      client_id:   clientId,
+      callback:    handleCredential,
+      auto_select: false,
+      ux_mode:     'popup'
+    });
+    google.accounts.id.renderButton(
+      document.getElementById('googleBtn'),
+      { theme: 'filled_black', size: 'large', width: 336, text: 'signin_with', logo_alignment: 'center' }
+    );
+    showView('signin');
+  }
+
+  // Called by GIS when the library is ready
+  window.onGoogleLibraryLoad = function () {
+    const clientId = localStorage.getItem(CLIENT_ID_KEY);
+    if (clientId) {
+      initGoogleSignIn(clientId);
+    } else {
+      showView('setup');
+    }
+  };
+
+  // Save Client ID and switch to sign-in
+  document.getElementById('saveClientBtn').addEventListener('click', () => {
+    const val = document.getElementById('clientIdInput').value.trim();
+    document.getElementById('setupError').classList.remove('visible');
+
+    if (!val || !val.includes('.apps.googleusercontent.com')) {
+      showError('setupView', 'That doesn\'t look like a valid Client ID — it should end in .apps.googleusercontent.com');
+      return;
+    }
+
+    localStorage.setItem(CLIENT_ID_KEY, val);
+
+    if (typeof google !== 'undefined') {
+      initGoogleSignIn(val);
+    } else {
+      // GIS not yet loaded — reload so it picks up the new Client ID
+      location.reload();
+    }
   });
 
-  // Hide error when user starts typing
-  ['username', 'password'].forEach(id => {
-    document.getElementById(id).addEventListener('input', () => {
-      errorEl.classList.remove('visible');
-    });
+  // Allow Enter key in Client ID field
+  document.getElementById('clientIdInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('saveClientBtn').click();
+  });
+
+  // "Change Client ID" link
+  document.getElementById('changeClientLink').addEventListener('click', () => {
+    document.getElementById('clientIdInput').value = localStorage.getItem(CLIENT_ID_KEY) || '';
+    showView('setup');
   });
 </script>
-
-<style>
-  @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25%       { transform: translateX(-6px); }
-    75%       { transform: translateX(6px); }
-  }
-</style>
 </body>
 </html>
