@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AdvisorAI — Sign In</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary:    #0F1117;
+      --bg-surface:    #1A1D27;
+      --bg-elevated:   #222536;
+      --border:        #2E3250;
+      --accent:        #5B6AF0;
+      --accent-hover:  #4a59e0;
+      --accent-soft:   rgba(91,106,240,0.12);
+      --text-primary:  #E8E9F0;
+      --text-secondary:#8B8FA8;
+      --error:         #F87171;
+      --error-soft:    rgba(248,113,113,0.1);
+      --font:          'Inter', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    /* ── Brand mark ────────────────────────────── */
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .brand .accent { color: var(--accent); }
+
+    .brand-sub {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 36px;
+      text-align: center;
+    }
+
+    /* ── Card ──────────────────────────────────── */
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 36px 32px;
+      width: 100%;
+      max-width: 380px;
+    }
+
+    .card-title {
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .card-subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 28px;
+    }
+
+    /* ── Form ──────────────────────────────────── */
+    .field {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    input {
+      width: 100%;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-family: var(--font);
+      font-size: 14px;
+      padding: 10px 14px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+    }
+
+    input::placeholder {
+      color: var(--text-secondary);
+      opacity: 0.6;
+    }
+
+    /* ── Error banner ──────────────────────────── */
+    .error-banner {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      background: var(--error-soft);
+      border: 1px solid rgba(248,113,113,0.25);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: var(--error);
+      margin-bottom: 16px;
+    }
+
+    .error-banner.visible { display: flex; }
+
+    /* ── Button ────────────────────────────────── */
+    .btn {
+      width: 100%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 600;
+      padding: 11px;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .btn:hover { background: var(--accent-hover); }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* ── Demo hint ─────────────────────────────── */
+    .demo-hint {
+      margin-top: 24px;
+      padding: 14px;
+      background: var(--accent-soft);
+      border: 1px solid rgba(91,106,240,0.2);
+      border-radius: 8px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    .demo-hint strong { color: var(--text-primary); }
+
+    /* ── Footer ────────────────────────────────── */
+    .footer {
+      margin-top: 28px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="brand">🎧 Advisor<span class="accent">AI</span></div>
+  <p class="brand-sub">Contact Centre Intelligence Platform</p>
+
+  <div class="card">
+    <div class="card-title">Sign in</div>
+    <div class="card-subtitle">Enter your credentials to access the dashboard</div>
+
+    <form id="loginForm" novalidate>
+
+      <div class="error-banner" id="errorBanner">
+        <span>⚠</span>
+        <span id="errorMsg">Incorrect username or password.</span>
+      </div>
+
+      <div class="field">
+        <label for="username">Username</label>
+        <input
+          type="text"
+          id="username"
+          name="username"
+          placeholder="Enter username"
+          autocomplete="username"
+          required
+        >
+      </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          placeholder="Enter password"
+          autocomplete="current-password"
+          required
+        >
+      </div>
+
+      <button type="submit" class="btn" id="submitBtn">Sign In</button>
+
+    </form>
+
+    <div class="demo-hint">
+      <strong>Demo credentials</strong><br>
+      Username: <strong>advisor</strong><br>
+      Password: <strong>demo2024</strong>
+    </div>
+  </div>
+
+  <p class="footer">Session expires when you close the browser tab.</p>
+
+<script>
+  // ── Credentials ───────────────────────────────────────────────────────
+  // Change these to update who can log in. Client-side only — not for
+  // production use. Suitable for portfolio/demo gating.
+  const VALID_USERS = [
+    { username: 'advisor', password: 'demo2024' }
+  ];
+
+  // If already authenticated, skip the login page
+  if (sessionStorage.getItem('advisorai_auth') === '1') {
+    const dest = new URLSearchParams(location.search).get('next') || 'index.html';
+    location.replace(dest);
+  }
+
+  const form      = document.getElementById('loginForm');
+  const errorEl   = document.getElementById('errorBanner');
+  const errorMsg  = document.getElementById('errorMsg');
+  const submitBtn = document.getElementById('submitBtn');
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+
+    const match = VALID_USERS.find(
+      u => u.username === username && u.password === password
+    );
+
+    if (!match) {
+      errorMsg.textContent = 'Incorrect username or password.';
+      errorEl.classList.add('visible');
+      document.getElementById('password').value = '';
+      document.getElementById('password').focus();
+      // Brief shake animation
+      form.style.animation = 'none';
+      requestAnimationFrame(() => {
+        form.style.animation = 'shake 0.3s ease';
+      });
+      return;
+    }
+
+    // Auth success
+    errorEl.classList.remove('visible');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Signing in…';
+
+    sessionStorage.setItem('advisorai_auth', '1');
+    sessionStorage.setItem('advisorai_user', username);
+
+    const dest = new URLSearchParams(location.search).get('next') || 'index.html';
+    location.replace(dest);
+  });
+
+  // Hide error when user starts typing
+  ['username', 'password'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => {
+      errorEl.classList.remove('visible');
+    });
+  });
+</script>
+
+<style>
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25%       { transform: translateX(-6px); }
+    75%       { transform: translateX(6px); }
+  }
+</style>
+</body>
+</html>

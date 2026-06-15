@@ -79,6 +79,21 @@
     nav a:hover { background: var(--bg-elevated); color: var(--text-primary); }
     nav a.active { color: var(--accent); background: var(--accent-soft); }
 
+    .sign-out-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      margin-left: 8px;
+      transition: all 0.15s;
+    }
+    .sign-out-btn:hover { border-color: var(--error); color: var(--error); }
+
     /* ── Main layout ─────────────────────────────── */
     main {
       max-width: 900px;
@@ -535,6 +550,7 @@
   </style>
 </head>
 <body>
+<script>if (sessionStorage.getItem('advisorai_auth') !== '1') { location.replace('login.html?next=index.html'); }</script>
 
 <!-- ── Header ──────────────────────────────────────────── -->
 <header>
@@ -547,6 +563,7 @@
     <a href="dashboard.html">Dashboard</a>
     <a href="profile.html">Customer Profiles</a>
     <a href="metrics.html">Metrics</a>
+    <button class="sign-out-btn" onclick="sessionStorage.clear(); location.replace('login.html');">Sign Out</button>
   </nav>
 </header>
 
