@@ -843,7 +843,7 @@ async function analyseCall() {
   }
 
   if (!apiKey) {
-    alert('Please enter your Anthropic API key in the settings panel above.');
+    alert('Please enter your Groq API key in the settings panel above.');
     openSettings();
     return;
   }
@@ -906,6 +906,7 @@ async function callGroqAPI(transcript, apiKey, customerId) {
     body: JSON.stringify({
       model: 'llama-3.3-70b-versatile',
       temperature: 0.3,
+      max_tokens: 1024,
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user',   content: buildPrompt(transcript, customerId) }
